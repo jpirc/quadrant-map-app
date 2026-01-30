@@ -6,7 +6,7 @@ from io import BytesIO
 import numpy as np
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Strategic Quadrant Generator", layout="wide")
+st.set_page_config(page_title="Strategic Quadrant Generator", layout="centered")
 
 st.title("🎯 Strategic Quadrant Map Generator")
 st.markdown("""
@@ -15,6 +15,7 @@ st.markdown("""
 2. Ensure it has columns for **Label**, **Performance (X)**, and **Importance (Y)**.
 3. The app will automatically calculate averages, draw the red dashed lines, and generate your files.
 """)
+st.divider()
 
 # --- FILE UPLOAD ---
 uploaded_file = st.file_uploader("Upload Data File (CSV or XLSX)", type=['csv', 'xlsx'])
@@ -26,17 +27,19 @@ if uploaded_file:
     else:
         df = pd.read_excel(uploaded_file)
 
-    st.write("### Data Preview")
-    st.dataframe(df.head())
+    st.write("### 📊 Data Preview")
+    st.dataframe(df.head(), use_container_width=True)
 
     # --- COLUMN SELECTION ---
+    st.write("### ⚙️ Column Mapping")
     cols = df.columns.tolist()
     c1, c2, c3 = st.columns(3)
     label_col = c1.selectbox("Select Label Column", cols, index=0)
     x_col = c2.selectbox("Select Performance Column (X-Axis)", cols, index=1 if len(cols) > 1 else 0)
     y_col = c3.selectbox("Select Importance Column (Y-Axis)", cols, index=2 if len(cols) > 2 else 0)
 
-    if st.button("Generate Quadrant Map"):
+    st.divider()
+    if st.button("🎨 Generate Quadrant Map", type="primary", use_container_width=True):
         # --- CALCULATIONS ---
         avg_x = df[x_col].mean()
         avg_y = df[y_col].mean()
@@ -130,20 +133,24 @@ if uploaded_file:
         ws.write(row_count + 3, 1, f'X Avg: {avg_x:.2%}', txt_fmt)
         ws.write(row_count + 3, 2, f'Y Avg: {avg_y:.2%}', txt_fmt)
 
-        # Hidden Data for Red Lines (must be raw numbers, not percentages)
+        ws.write(row_count + 4, 0, 'Axis Ranges:', header_fmt)
+        ws.write(row_count + 4, 1, f'X: {x_min:.2%} to {x_max:.2%}', txt_fmt)
+        ws.write(row_count + 4, 2, f'Y: {y_min:.2%} to {y_max:.2%}', txt_fmt)
+
+        # Hidden Data for Red Lines (raw decimal values)
         num_fmt = workbook.add_format({'num_format': '0.0000'})
 
-        # Vertical line data: X coords (avg_x) and Y coords (y_min to y_max)
-        ws.write(row_count + 5, 5, avg_x, num_fmt)
-        ws.write(row_count + 6, 5, avg_x, num_fmt)
-        ws.write(row_count + 5, 6, y_min, num_fmt)
-        ws.write(row_count + 6, 6, y_max, num_fmt)
+        # Vertical line: X=avg_x from y_min to y_max
+        ws.write(row_count + 7, 5, avg_x, num_fmt)  # X coord point 1
+        ws.write(row_count + 8, 5, avg_x, num_fmt)  # X coord point 2
+        ws.write(row_count + 7, 6, y_min, num_fmt)  # Y coord point 1
+        ws.write(row_count + 8, 6, y_max, num_fmt)  # Y coord point 2
 
-        # Horizontal line data: X coords (x_min to x_max) and Y coords (avg_y)
-        ws.write(row_count + 5, 8, x_min, num_fmt)
-        ws.write(row_count + 6, 8, x_max, num_fmt)
-        ws.write(row_count + 5, 9, avg_y, num_fmt)
-        ws.write(row_count + 6, 9, avg_y, num_fmt)
+        # Horizontal line: Y=avg_y from x_min to x_max
+        ws.write(row_count + 7, 8, x_min, num_fmt)  # X coord point 1
+        ws.write(row_count + 8, 8, x_max, num_fmt)  # X coord point 2
+        ws.write(row_count + 7, 9, avg_y, num_fmt)  # Y coord point 1
+        ws.write(row_count + 8, 9, avg_y, num_fmt)  # Y coord point 2
 
         # Create Chart
         chart = workbook.add_chart({'type': 'scatter'})
@@ -169,15 +176,15 @@ if uploaded_file:
         # Red Axes Lines
         # Vertical line at X average
         chart.add_series({
-            'categories': ['Analysis', row_count+5, 5, row_count+6, 5],
-            'values': ['Analysis', row_count+5, 6, row_count+6, 6],
+            'categories': ['Analysis', row_count+7, 5, row_count+8, 5],
+            'values': ['Analysis', row_count+7, 6, row_count+8, 6],
             'line': {'color': 'red', 'dash_type': 'dash', 'width': 2},
             'marker': {'type': 'none'}
         })
         # Horizontal line at Y average
         chart.add_series({
-            'categories': ['Analysis', row_count+5, 8, row_count+6, 8],
-            'values': ['Analysis', row_count+5, 9, row_count+6, 9],
+            'categories': ['Analysis', row_count+7, 8, row_count+8, 8],
+            'values': ['Analysis', row_count+7, 9, row_count+8, 9],
             'line': {'color': 'red', 'dash_type': 'dash', 'width': 2},
             'marker': {'type': 'none'}
         })
@@ -203,10 +210,24 @@ if uploaded_file:
 
         ws.insert_chart('E2', chart)
         workbook.close()
-        
-        st.success("Analysis Complete!")
-        
+
+        st.success("✅ Analysis Complete!")
+        st.info(f"📈 Averages: X = {avg_x:.1%} | Y = {avg_y:.1%}")
+
         # DOWNLOAD BUTTONS
+        st.write("### 💾 Download Your Files")
         c_d1, c_d2 = st.columns(2)
-        c_d1.download_button("Download Map Image (PNG)", img_buffer, "Quadrant_Map.png", "image/png")
-        c_d2.download_button("Download Editable Excel (XLSX)", excel_buffer, "Quadrant_Analysis.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        c_d1.download_button(
+            "📸 Download PNG Image",
+            img_buffer,
+            "Quadrant_Map.png",
+            "image/png",
+            use_container_width=True
+        )
+        c_d2.download_button(
+            "📊 Download Excel File",
+            excel_buffer,
+            "Quadrant_Analysis.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
