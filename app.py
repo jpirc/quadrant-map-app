@@ -152,8 +152,8 @@ if uploaded_file:
         ws.write(row_count + 7, 9, avg_y, num_fmt)  # Y coord point 1
         ws.write(row_count + 8, 9, avg_y, num_fmt)  # Y coord point 2
 
-        # Create Chart (use scatter with straight lines and markers)
-        chart = workbook.add_chart({'type': 'scatter', 'subtype': 'straight_with_markers'})
+        # Create Chart (scatter plot with markers only, no connecting lines)
+        chart = workbook.add_chart({'type': 'scatter'})
         
         # Custom Labels with Leader Lines
         custom_labels = []
@@ -198,15 +198,21 @@ if uploaded_file:
         ws.write(row_count + 11, 0, 'Expected Y Range:', header_fmt)
         ws.write(row_count + 11, 1, f'{y_min:.2%} to {y_max:.2%}', txt_fmt)
 
-        # Let Excel auto-scale axes based on all data points (including red lines)
-        # This should prevent axis scaling mismatch
+        # Set axis bounds with padding (same as PNG chart)
+        # Use same bounds as the hidden data to ensure consistency
         chart.set_x_axis({
             'name': x_col,
-            'num_format': '0%'
+            'min': x_min,
+            'max': x_max,
+            'num_format': '0%',
+            'label_position': 'low'
         })
         chart.set_y_axis({
             'name': y_col,
-            'num_format': '0%'
+            'min': y_min,
+            'max': y_max,
+            'num_format': '0%',
+            'label_position': 'low'
         })
         chart.set_size({'width': 1100, 'height': 850})
         chart.set_legend({'none': True})
