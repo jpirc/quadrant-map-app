@@ -189,21 +189,30 @@ if uploaded_file:
             'marker': {'type': 'none'}
         })
 
-        # Set chart formatting AFTER all series to prevent auto-scaling
+        # Set chart formatting with explicit axis control to prevent auto-scaling
         chart.set_title({'name': f'Strategic Analysis (X={avg_x:.1%}, Y={avg_y:.1%})'})
+
+        # Calculate major units to prevent Excel auto-scaling
+        x_unit = (x_max - x_min) / 10  # 10 tick marks
+        y_unit = (y_max - y_min) / 10  # 10 tick marks
+
         chart.set_x_axis({
             'name': x_col,
             'min': x_min,
             'max': x_max,
+            'major_unit': x_unit,
             'num_format': '0%',
-            'major_gridlines': {'visible': False}
+            'major_gridlines': {'visible': False},
+            'crossing': y_min  # Force axis to cross at y_min
         })
         chart.set_y_axis({
             'name': y_col,
             'min': y_min,
             'max': y_max,
+            'major_unit': y_unit,
             'num_format': '0%',
-            'major_gridlines': {'visible': False}
+            'major_gridlines': {'visible': False},
+            'crossing': x_min  # Force axis to cross at x_min
         })
         chart.set_size({'width': 1100, 'height': 850})
         chart.set_legend({'none': True})
