@@ -137,20 +137,20 @@ if uploaded_file:
         ws.write(row_count + 4, 1, f'X: {x_min:.2%} to {x_max:.2%}', txt_fmt)
         ws.write(row_count + 4, 2, f'Y: {y_min:.2%} to {y_max:.2%}', txt_fmt)
 
-        # Hidden Data for Red Lines (raw decimal values)
-        num_fmt = workbook.add_format({'num_format': '0.0000'})
+        # Hidden Data for Red Lines - use NO formatting (raw values only)
+        # This ensures Excel plots them exactly as-is without any conversion
 
         # Vertical line: X=avg_x from y_min to y_max
-        ws.write(row_count + 7, 5, avg_x, num_fmt)  # X coord point 1
-        ws.write(row_count + 8, 5, avg_x, num_fmt)  # X coord point 2
-        ws.write(row_count + 7, 6, y_min, num_fmt)  # Y coord point 1
-        ws.write(row_count + 8, 6, y_max, num_fmt)  # Y coord point 2
+        ws.write(row_count + 7, 5, avg_x)  # X coord point 1
+        ws.write(row_count + 8, 5, avg_x)  # X coord point 2
+        ws.write(row_count + 7, 6, y_min)  # Y coord point 1
+        ws.write(row_count + 8, 6, y_max)  # Y coord point 2
 
         # Horizontal line: Y=avg_y from x_min to x_max
-        ws.write(row_count + 7, 8, x_min, num_fmt)  # X coord point 1
-        ws.write(row_count + 8, 8, x_max, num_fmt)  # X coord point 2
-        ws.write(row_count + 7, 9, avg_y, num_fmt)  # Y coord point 1
-        ws.write(row_count + 8, 9, avg_y, num_fmt)  # Y coord point 2
+        ws.write(row_count + 7, 8, x_min)  # X coord point 1
+        ws.write(row_count + 8, 8, x_max)  # X coord point 2
+        ws.write(row_count + 7, 9, avg_y)  # Y coord point 1
+        ws.write(row_count + 8, 9, avg_y)  # Y coord point 2
 
         # Create Chart (scatter plot with markers only, no connecting lines)
         chart = workbook.add_chart({'type': 'scatter'})
