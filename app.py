@@ -48,17 +48,8 @@ if uploaded_file:
         x_range = df[x_col].max() - df[x_col].min()
         y_range = df[y_col].max() - df[y_col].min()
 
-        x_min_raw = df[x_col].min() - (x_range * 0.15)
-        x_max_raw = df[x_col].max() + (x_range * 0.15)
-        y_min_raw = df[y_col].min() - (y_range * 0.15)
-        y_max_raw = df[y_col].max() + (y_range * 0.15)
-
-        # Round bounds to clean values for Excel compatibility
-        # Round min DOWN to nearest 0.5%, max UP to nearest 0.5%
-        x_min = np.floor(x_min_raw * 200) / 200  # Round down to nearest 0.005 (0.5%)
-        x_max = np.ceil(x_max_raw * 200) / 200   # Round up to nearest 0.005 (0.5%)
-        y_min = np.floor(y_min_raw * 200) / 200  # Round down to nearest 0.005 (0.5%)
-        y_max = np.ceil(y_max_raw * 200) / 200   # Round up to nearest 0.005 (0.5%)
+        x_min, x_max = df[x_col].min() - (x_range * 0.15), df[x_col].max() + (x_range * 0.15)
+        y_min, y_max = df[y_col].min() - (y_range * 0.15), df[y_col].max() + (y_range * 0.15)
 
         # --- 1. GENERATE PNG IMAGE ---
         fig, ax = plt.subplots(figsize=(14, 11))
@@ -146,20 +137,21 @@ if uploaded_file:
         ws.write(row_count + 4, 1, f'X: {x_min:.2%} to {x_max:.2%}', txt_fmt)
         ws.write(row_count + 4, 2, f'Y: {y_min:.2%} to {y_max:.2%}', txt_fmt)
 
-        # Hidden Data for Red Lines - use NO formatting (raw values only)
-        # This ensures Excel plots them exactly as-is without any conversion
+        # Hidden Data for Red Lines
+        # Use SAME format as main data to ensure Excel treats them identically
+        # Main data uses pct_fmt ('0.0%'), so red line data should too
 
         # Vertical line: X=avg_x from y_min to y_max
-        ws.write(row_count + 7, 5, avg_x)  # X coord point 1
-        ws.write(row_count + 8, 5, avg_x)  # X coord point 2
-        ws.write(row_count + 7, 6, y_min)  # Y coord point 1
-        ws.write(row_count + 8, 6, y_max)  # Y coord point 2
+        ws.write(row_count + 7, 5, avg_x, pct_fmt)  # X coord point 1
+        ws.write(row_count + 8, 5, avg_x, pct_fmt)  # X coord point 2
+        ws.write(row_count + 7, 6, y_min, pct_fmt)  # Y coord point 1
+        ws.write(row_count + 8, 6, y_max, pct_fmt)  # Y coord point 2
 
         # Horizontal line: Y=avg_y from x_min to x_max
-        ws.write(row_count + 7, 8, x_min)  # X coord point 1
-        ws.write(row_count + 8, 8, x_max)  # X coord point 2
-        ws.write(row_count + 7, 9, avg_y)  # Y coord point 1
-        ws.write(row_count + 8, 9, avg_y)  # Y coord point 2
+        ws.write(row_count + 7, 8, x_min, pct_fmt)  # X coord point 1
+        ws.write(row_count + 8, 8, x_max, pct_fmt)  # X coord point 2
+        ws.write(row_count + 7, 9, avg_y, pct_fmt)  # Y coord point 1
+        ws.write(row_count + 8, 9, avg_y, pct_fmt)  # Y coord point 2
 
         # Create Chart (scatter plot with markers only, no connecting lines)
         chart = workbook.add_chart({'type': 'scatter'})
@@ -207,21 +199,18 @@ if uploaded_file:
         ws.write(row_count + 11, 0, 'Expected Y Range:', header_fmt)
         ws.write(row_count + 11, 1, f'{y_min:.2%} to {y_max:.2%}', txt_fmt)
 
-        # Set axis bounds with padding (same as PNG chart)
-        # Use same bounds as the hidden data to ensure consistency
+        # Set axis bounds - simple approach
         chart.set_x_axis({
             'name': x_col,
             'min': x_min,
             'max': x_max,
-            'num_format': '0%',
-            'label_position': 'low'
+            'num_format': '0%'
         })
         chart.set_y_axis({
             'name': y_col,
             'min': y_min,
             'max': y_max,
-            'num_format': '0%',
-            'label_position': 'low'
+            'num_format': '0%'
         })
         chart.set_size({'width': 1100, 'height': 850})
         chart.set_legend({'none': True})
