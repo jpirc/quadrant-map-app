@@ -43,13 +43,22 @@ if uploaded_file:
         # --- CALCULATIONS ---
         avg_x = df[x_col].mean()
         avg_y = df[y_col].mean()
-        
-        # Axis Limits (Min - 10%, Max + 10%)
+
+        # Axis Limits (Min - 15%, Max + 15%)
         x_range = df[x_col].max() - df[x_col].min()
         y_range = df[y_col].max() - df[y_col].min()
-        
-        x_min, x_max = df[x_col].min() - (x_range * 0.15), df[x_col].max() + (x_range * 0.15)
-        y_min, y_max = df[y_col].min() - (y_range * 0.15), df[y_col].max() + (y_range * 0.15)
+
+        x_min_raw = df[x_col].min() - (x_range * 0.15)
+        x_max_raw = df[x_col].max() + (x_range * 0.15)
+        y_min_raw = df[y_col].min() - (y_range * 0.15)
+        y_max_raw = df[y_col].max() + (y_range * 0.15)
+
+        # Round bounds to clean values for Excel compatibility
+        # Round min DOWN to nearest 0.5%, max UP to nearest 0.5%
+        x_min = np.floor(x_min_raw * 200) / 200  # Round down to nearest 0.005 (0.5%)
+        x_max = np.ceil(x_max_raw * 200) / 200   # Round up to nearest 0.005 (0.5%)
+        y_min = np.floor(y_min_raw * 200) / 200  # Round down to nearest 0.005 (0.5%)
+        y_max = np.ceil(y_max_raw * 200) / 200   # Round up to nearest 0.005 (0.5%)
 
         # --- 1. GENERATE PNG IMAGE ---
         fig, ax = plt.subplots(figsize=(14, 11))
